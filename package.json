@@ -1,0 +1,15 @@
+{
+  "name": "ra-nodejs-tutorial",
+  "version": "1.0.0",
+  "description": "Learn NodeJS at Rikkei Academy",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Rikkei Academy",
+    "NodeJS"
+  ],
+  "author": "quanght",
+  "license": "UNLICENSED"
+}
