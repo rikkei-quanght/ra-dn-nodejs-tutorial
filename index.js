@@ -12,7 +12,7 @@ const server = http.createServer((request, response) => {
     let html = '';
 
     html += `
-        <form action="http://127.0.0.1:8080/" method="GET">
+        <form action="http://127.0.0.1:8080/" method="POST">
             <input type="text" name="keyword" placeholder="Từ khóa"/>
             <input type="text" name="course"  placeholder="Khóa học"/>
             <button type="submit">Tìm kiếm</button>
