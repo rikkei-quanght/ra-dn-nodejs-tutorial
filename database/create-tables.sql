@@ -1,3 +1,5 @@
+-- Đổi password: ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+
 CREATE TABLE `users` (
     `user_id` INT AUTO_INCREMENT,
     `username` VARCHAR(20) NOT NULL,
