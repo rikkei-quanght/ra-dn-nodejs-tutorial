@@ -1,4 +1,5 @@
 import getNextId from "../utilities/getNextId.js";
+import { querySearchUsers, deleteUserByUserId } from '../repositories/user.repository.js';
 
 let users = [
     {
@@ -15,10 +16,12 @@ let users = [
 
 // Trả về trang HTML hiển thị danh sách users
 const searchUsers = (req, res) => {
-    res.render('pages/users/index', {
-        title: 'Danh sách người dùng',
-        users: users,
-    })
+    querySearchUsers().then(userList => {
+        res.render('pages/users/index', {
+            title: 'Danh sách người dùng',
+            users: userList,
+        })
+    });
 };
 
 // Trả về HTML - form thêm mới user
@@ -89,18 +92,20 @@ const updateUser = (req, res) => {
 const deleteUser = (req, res) => {
     const { id } = req.params;
 
-    const user = users.find(user => user.id == id);
+    // const user = users.find(user => user.id == id);
 
-    if (user) {
-        users = users.filter(user => user.id != id);
+    // if (user) {
+    //     users = users.filter(user => user.id != id);
 
-        // Chuyển hướng về trang danh sách
-        res.redirect('/users');
-    } else {
-        res.render('errors/404', {
-            msg: 'Người dùng không tồn tại'
-        });
-    }
+    deleteUserByUserId(id);
+
+    res.redirect('/users');
+
+    // } else {
+    //     res.render('errors/404', {
+    //         msg: 'Người dùng không tồn tại'
+    //     });
+    // }
 }
 
 export default {

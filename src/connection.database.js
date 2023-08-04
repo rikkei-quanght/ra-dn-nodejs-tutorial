@@ -1,11 +1,7 @@
-import mysql from 'mysql';
-
-const connection = mysql.createConnection({
+export default {
     host: '127.0.0.1',
     port: 3306,
     user: 'root',
     password: 'password',
     database: 'rikkei_academy_02'
-});
-
-export default connection;
+};
