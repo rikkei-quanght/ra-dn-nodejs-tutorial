@@ -10,15 +10,25 @@ const searchUsers = (request, response) => {
                     error: error.message,
                 });
         } else {
-            response.send({
-                users: result
-            });
+            response.send(result);
         }
     })
 }
 
 const addUser = (request, response) => {
+    const requestBody = request.body;
 
+    userService.addUser(requestBody, (error, result) => {
+        if (error) {
+            response.status(500)
+                .send({
+                    error: error,
+                });
+        } else {
+            response.status(201)
+                .send();
+        }
+    })
 }
 
 const getDetailUser = (request, response) => {

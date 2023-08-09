@@ -1,9 +1,10 @@
+import moment from 'moment';
 import getConnection from './../../config/connection.database.js';
 
 const searchUsers = (params, callback) => {
     const connection = getConnection();
 
-    let sql = 'SELECT * FROM users';
+    let sql = ' FROM users';
     const bindParams = [];
 
     const page = params.page || 1;
@@ -19,7 +20,43 @@ const searchUsers = (params, callback) => {
 
     sql += ` LIMIT ${limit} OFFSET ${offset}`;
 
-    connection.query(sql, bindParams, (error, result) => {
+    connection.query('SELECT COUNT(1) AS total' + sql, bindParams, (error, countResult) => {
+        if (error) {
+            callback(error, null);
+        } else if (countResult[0].total !== 0) {
+            connection.query('SELECT *' + sql, bindParams, (error, result) => {
+                if (error) {
+                    callback(error, null);
+                } else {
+                    callback(null, {
+                        total: countResult[0].total,
+                        records: result
+                    });
+                }
+            });
+            connection.end();
+        } else {
+            callback(null, {
+                total: 0,
+                records: []
+            });
+            connection.end();
+        }
+    });
+}
+
+const addUser = (user, callback) => {
+    const connection = getConnection();
+
+    const userToCreate = {
+        ...user,
+        created_by_id: 1, // TODO: chờ làm login
+        created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+        updated_by_id: 1, // TODO: chờ làm login
+        updated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+    }
+
+    connection.query('INSERT INTO users SET ?', userToCreate, (error, result) => {
         if (error) {
             callback(error, null);
         } else {
@@ -28,10 +65,6 @@ const searchUsers = (params, callback) => {
     });
 
     connection.end();
-}
-
-const addUser = (params, callback) => {
-
 }
 
 const getDetailUser = (id, callback) => {
