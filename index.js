@@ -7,6 +7,10 @@ import router from './src/application/routes.js';
 
 const app = express();
 
+// Serving file
+// https://expressjs.com/en/starter/static-files.html
+app.use(express.static('public'))
+
 // Cấu hình body parser
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));

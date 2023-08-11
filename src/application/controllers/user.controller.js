@@ -17,8 +17,12 @@ const searchUsers = (request, response) => {
 
 const addUser = (request, response) => {
     const requestBody = request.body;
+    const avatar = request.file;
 
-    userService.addUser(requestBody, (error, result) => {
+    userService.addUser({
+        ...requestBody,
+        avatar: avatar
+    }, (error, result) => {
         if (error) {
             response.status(500)
                 .send({

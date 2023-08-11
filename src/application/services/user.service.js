@@ -1,4 +1,6 @@
 import userRepository from './../repositories/user.repository.js';
+import fs from 'fs';
+import { getFileExtension } from '../../utilities/uploadUtil.js';
 
 const searchUsers = (params, callback) => {
     if (params.limit && !(/^[0-9]+$/.test(params.limit))) {
@@ -17,6 +19,8 @@ const searchUsers = (params, callback) => {
 }
 
 const addUser = (requestBody, callback) => {
+    const { originalname, path } = requestBody.avatar;
+
     const validate = (params) => {
         let errors = new Map();
 
@@ -68,9 +72,9 @@ const addUser = (requestBody, callback) => {
             errors.set('password', 'Mật khẩu chỉ cho phép từ 8 đến 20 ký tự.');
         }
 
-        if (typeof params.role !== 'number') {
+        if (typeof params.role !== 'string') {
             errors.set('role', 'Vai trò phải là chuỗi.');
-        } else if (params.role !== 1 && params.role !== 2) {
+        } else if (params.role !== '1' && params.role !== '2') {
             errors.set('role', 'Vai trò chỉ cho phép nhập 1 hoặc 2.');
         }
 
@@ -82,17 +86,29 @@ const addUser = (requestBody, callback) => {
     if (validateErrors.size !== 0) {
         callback(Object.fromEntries(validateErrors), null);
     } else {
-        userRepository.addUser({
+        const avatarExtension = getFileExtension(originalname);
+        const avatar = `avatar/${requestBody.username}.${avatarExtension}`;
+        const avatarLocation = `./public/${avatar}`;
+
+        // Copy upload file to saving location
+        fs.cpSync(path, avatarLocation);
+
+        const newUser = {
             username: requestBody.username,
             email: requestBody.email,
             first_name: requestBody.first_name,
             last_name: requestBody.last_name,
             password: requestBody.password,
             role: requestBody.role,
-        }, (error, result) => {
+            avatar: avatar
+        };
+
+        userRepository.addUser(newUser, (error, result) => {
             if (error) {
+                fs.rmSync(path);
                 callback(error, null);
             } else {
+                fs.rmSync(path);
                 callback(null, result);
             }
         })
