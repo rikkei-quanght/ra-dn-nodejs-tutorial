@@ -3,12 +3,16 @@ import multer from 'multer';
 
 import uploadConfig from "../config/upload.config.js";
 
+import authController from "./controllers/auth.controller.js";
 import userController from "./controllers/user.controller.js";
 
 // https://expressjs.com/en/resources/middleware/multer.html
 const upload = multer(uploadConfig);
 
 const router = Router();
+
+// Authentication
+router.post('/login', authController.login);
 
 // User management
 router.get('/users', userController.searchUsers);

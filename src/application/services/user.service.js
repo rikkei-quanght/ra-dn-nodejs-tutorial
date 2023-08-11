@@ -1,6 +1,6 @@
 import userRepository from './../repositories/user.repository.js';
 import fs from 'fs';
-import { getFileExtension } from '../../utilities/uploadUtil.js';
+import { getFileExtension } from '../../utilities/upload.util.js';
 
 const searchUsers = (params, callback) => {
     if (params.limit && !(/^[0-9]+$/.test(params.limit))) {
@@ -19,7 +19,13 @@ const searchUsers = (params, callback) => {
 }
 
 const addUser = (requestBody, callback) => {
-    const { originalname, path } = requestBody.avatar;
+    let originalname = null;
+    let path = null;
+
+    if (requestBody.avatar) {
+        originalname = requestBody.avatar.originalname;
+        path = requestBody.avatar.path;
+    }
 
     const validate = (params) => {
         let errors = new Map();
@@ -86,12 +92,16 @@ const addUser = (requestBody, callback) => {
     if (validateErrors.size !== 0) {
         callback(Object.fromEntries(validateErrors), null);
     } else {
-        const avatarExtension = getFileExtension(originalname);
-        const avatar = `avatar/${requestBody.username}.${avatarExtension}`;
-        const avatarLocation = `./public/${avatar}`;
+        let avatar = null;
 
-        // Copy upload file to saving location
-        fs.cpSync(path, avatarLocation);
+        if (requestBody.avatar) {
+            const avatarExtension = getFileExtension(originalname);
+            avatar = `avatar/${requestBody.username}.${avatarExtension}`;
+            const avatarLocation = `./public/${avatar}`;
+
+            // Copy upload file to saving location
+            fs.cpSync(path, avatarLocation);
+        }
 
         const newUser = {
             username: requestBody.username,
@@ -104,11 +114,12 @@ const addUser = (requestBody, callback) => {
         };
 
         userRepository.addUser(newUser, (error, result) => {
-            if (error) {
+            if (path) {
                 fs.rmSync(path);
+            }
+            if (error) {
                 callback(error, null);
             } else {
-                fs.rmSync(path);
                 callback(null, result);
             }
         })
