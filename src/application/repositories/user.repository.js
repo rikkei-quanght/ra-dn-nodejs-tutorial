@@ -1,6 +1,5 @@
 import moment from 'moment';
 import getConnection from './../../config/connection.database.js';
-import { randomString } from '../../utilities/string.util.js';
 import { encryptPassword } from '../../utilities/hash.util.js';
 
 const searchUsers = (params, callback) => {
@@ -20,13 +19,14 @@ const searchUsers = (params, callback) => {
         bindParams.push(name);
     }
 
-    sql += ` LIMIT ${limit} OFFSET ${offset}`;
+    const countQuery = 'SELECT COUNT(1) AS total' + sql;
 
-    connection.query('SELECT COUNT(1) AS total' + sql, bindParams, (error, countResult) => {
+    connection.query(countQuery, bindParams, (error, countResult) => {
         if (error) {
             callback(error, null);
         } else if (countResult[0].total !== 0) {
-            connection.query('SELECT *' + sql, bindParams, (error, result) => {
+            const selectColumnsQuery = 'SELECT user_id, username, email, first_name, last_name, role, avatar, created_at, created_by_id, updated_at, updated_by_id' + sql + ` LIMIT ${limit} OFFSET ${offset}`;
+            connection.query(selectColumnsQuery, bindParams, (error, result) => {
                 if (error) {
                     callback(error, null);
                 } else {
@@ -53,9 +53,7 @@ const addUser = (user, callback) => {
     const userToCreate = {
         ...user,
         password: encryptPassword(user.password),
-        created_by_id: 1, // TODO: chờ làm login
         created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
-        updated_by_id: 1, // TODO: chờ làm login
         updated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
     }
 
@@ -73,7 +71,7 @@ const addUser = (user, callback) => {
 const getDetailUser = (id, callback) => {
     const connection = getConnection();
 
-    connection.query('SELECT * FROM users WHERE user_id = ?', [id], (error, result) => {
+    connection.query('SELECT user_id, username, email, first_name, last_name, role, avatar, created_at, created_by_id, updated_at, updated_by_id FROM users WHERE user_id = ?', [id], (error, result) => {
         if (error) {
             callback(error, null);
         } else {
@@ -87,7 +85,18 @@ const getDetailUser = (id, callback) => {
 const getUserByUsernameAndRole = (username, role, callback) => {
     const connection = getConnection();
 
-    connection.query('SELECT * FROM users WHERE username = ? AND role = ?', [username, role], (error, result) => {
+    connection.query(`
+      SELECT
+        user_id,
+        username,
+        email,
+        password,
+        role
+      FROM users
+      WHERE
+        username = ?
+        AND role = ?
+    `, [username, role], (error, result) => {
         if (error) {
             callback(error, null);
         } else {
@@ -101,7 +110,23 @@ const getUserByUsernameAndRole = (username, role, callback) => {
 const getUserByApiKey = (apiKey, callback) => {
     const connection = getConnection();
 
-    connection.query('SELECT * FROM users WHERE api_key = ?', [apiKey], (error, result) => {
+    connection.query(`
+      SELECT
+        user_id,
+        username,
+        email,
+        first_name,
+        last_name,
+        role,
+        avatar,
+        created_at,
+        created_by_id,
+        updated_at,
+        updated_by_id
+      FROM users
+      WHERE
+        api_key = ?
+    `, [apiKey], (error, result) => {
         if (error) {
             callback(error, null);
         } else {
@@ -112,10 +137,8 @@ const getUserByApiKey = (apiKey, callback) => {
     connection.end();
 }
 
-const createApiKey = (userId, callback) => {
+const createApiKey = (userId, apiKey, callback) => {
     const connection = getConnection();
-
-    const apiKey = userId + randomString(128);
 
     connection.query('UPDATE users SET api_key = ? WHERE user_id = ?', [apiKey, userId], (error, result) => {
         if (error) {
@@ -128,8 +151,33 @@ const createApiKey = (userId, callback) => {
     connection.end();
 }
 
-const updateUser = (params, callback) => {
+const updateUser = (userId, params, callback) => {
+    const connection = getConnection();
 
+    let sql = 'UPDATE users SET first_name = ?, last_name = ?, role = ?, updated_by_id = ?';
+    let bindParams = [params.first_name, params.last_name, params.role, params.updated_by_id];
+
+    if (params.password) {
+        sql += ', password = ?';
+        bindParams.push(encryptPassword(params.password));
+    }
+    if (params.avatar) {
+        sql += ', avatar = ?';
+        bindParams.push(params.avatar);
+    }
+
+    sql += ' WHERE user_id = ?';
+    bindParams.push(userId);
+
+    connection.query(sql, bindParams, (error, result) => {
+        if (error) {
+            callback(error, null);
+        } else {
+            callback(null, result);
+        }
+    });
+
+    connection.end();
 }
 
 const deleteUser = (id, callback) => {
@@ -151,6 +199,7 @@ export default {
     addUser,
     getDetailUser,
     getUserByUsernameAndRole,
+    getUserByApiKey,
     createApiKey,
     updateUser,
     deleteUser,
