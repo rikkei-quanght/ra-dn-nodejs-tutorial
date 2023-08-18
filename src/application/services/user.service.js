@@ -18,7 +18,20 @@ const searchUsers = (params, callback) => {
     }
 }
 
-const addUser = (requestBody, callback) => {
+
+const checkExistEmail = (username) => {
+    return new Promise((resolve, reject) => {
+        userRepository.getUserByUsername(username, (error, result) => {
+            if (error) {
+                reject(error)
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
+
+const addUser = async (requestBody, callback) => {
     let originalname = null;
     let path = null;
 
@@ -27,7 +40,7 @@ const addUser = (requestBody, callback) => {
         path = requestBody.avatar.path;
     }
 
-    const validate = (params) => {
+    const validate = async (params) => {
         let errors = new Map();
 
         // Validate username
@@ -37,6 +50,15 @@ const addUser = (requestBody, callback) => {
             errors.set('username', 'Tên đăng nhập phải là chuỗi.');
         } else if (params.username.length < 4 || params.username.length > 10) {
             errors.set('username', 'Tên đăng nhập chỉ cho phép 4 đến 10 ký tự.');
+        } else {
+            await checkExistEmail(params.username)
+                .then(result => {
+                    if (result.length !== 0) {
+                        errors.set('username', 'Tên đăng nhập đã tồn tại.');
+                    }
+                }).catch(error => {
+                    errors.set('username', error.message);
+                });
         }
 
         // Validate email
@@ -87,7 +109,7 @@ const addUser = (requestBody, callback) => {
         return errors;
     }
 
-    const validateErrors = validate(requestBody);
+    const validateErrors = await validate(requestBody);
 
     if (validateErrors.size !== 0) {
         callback(Object.fromEntries(validateErrors), null);

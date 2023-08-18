@@ -68,6 +68,21 @@ const addUser = (user, callback) => {
     connection.end();
 }
 
+const getUserByUsername = (username, callback) => {
+    const connection = getConnection();
+    const sql = 'SELECT * FROM users WHERE username = ?';
+
+    connection.query(sql, [username], (error, result) => {
+        if (error) {
+            callback(error, null);
+        } else {
+            callback(null, result);
+        }
+    });
+
+    connection.end();
+}
+
 const getDetailUser = (id, callback) => {
     const connection = getConnection();
 
@@ -197,6 +212,7 @@ const deleteUser = (id, callback) => {
 export default {
     searchUsers,
     addUser,
+    getUserByUsername,
     getDetailUser,
     getUserByUsernameAndRole,
     getUserByApiKey,

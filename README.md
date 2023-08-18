@@ -8,7 +8,7 @@ npm init
 ## Cài đặt các thư viện
 
 ```shell
-npm install express cors body-parser morgan bcrypt multer mysql
+npm install express cors body-parser morgan bcrypt multer mysql nodemon
 ```
 
 ## Cấu trúc source
